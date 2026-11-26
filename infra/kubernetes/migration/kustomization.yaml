@@ -5,4 +5,4 @@ resources:
 images:
 - name: ghcr.io/OWNER/REPOSITORY-api
   newName: ghcr.io/singhgauravlinux-coder/ai-interview-agent-api
-  newTag: 9aa0fc2f3f6af8383797ea03e54624be11e343de
+  newTag: 86c269fd64cd6843294a8d51dd54e38742aae48c
