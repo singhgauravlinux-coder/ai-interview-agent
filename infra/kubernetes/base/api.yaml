@@ -4,7 +4,7 @@ metadata:
   name: interview-api
   namespace: ai-interview-agent
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels: { app: interview-api }
   template:
@@ -34,7 +34,7 @@ spec:
             periodSeconds: 20
           resources:
             requests: { cpu: 100m, memory: 256Mi }
-            limits: { cpu: "1", memory: 1Gi }
+            limits: { cpu: 200m, memory: 400Mi }
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
