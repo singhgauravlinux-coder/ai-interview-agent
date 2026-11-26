@@ -3,14 +3,16 @@ kind: Kustomization
 resources:
 - namespace.yaml
 - configmap.yaml
+- redis.yaml
+- database.yaml
 - api.yaml
 - web.yaml
 - ingress.yaml
 - hpa.yaml
 images:
 - name: ghcr.io/OWNER/REPOSITORY-api
-  newName: ghcr.io/singhgauravlinux-coder/ai-interview-agent-api
-  newTag: 1eb9e33b7976a5fe869096bd87115ae86cee1f43
+  newName: ghcr.io/OWNER/REPOSITORY-api
+  newTag: latest
 - name: ghcr.io/OWNER/REPOSITORY-web
-  newName: ghcr.io/singhgauravlinux-coder/ai-interview-agent-web
-  newTag: 1eb9e33b7976a5fe869096bd87115ae86cee1f43
+  newName: ghcr.io/OWNER/REPOSITORY-web
+  newTag: latest

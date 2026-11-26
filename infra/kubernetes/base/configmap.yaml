@@ -4,9 +4,9 @@ metadata:
   name: interview-config
   namespace: ai-interview-agent
 data:
-  AI_PROVIDER: "gemini"
-  GEMINI_MODEL: "gemini-3.5-flash-lite"
-  OPENAI_MODEL: "gpt-4.1-mini"
-  CORS_ORIGINS: "https://interview.local"
-  REDIS_URL: "redis://YOUR_MANAGED_REDIS_HOST:6379/0"
-  NEXT_PUBLIC_API_URL: "/api/v1"
+  AI_PROVIDER: gemini
+  GEMINI_MODEL: gemini-flash-latest
+  OPENAI_MODEL: gpt-4.1-mini
+  CORS_ORIGINS: https://interview.example.com
+  REDIS_URL: redis://interview-redis:6379/0
+  NEXT_PUBLIC_API_URL: /api/v1
