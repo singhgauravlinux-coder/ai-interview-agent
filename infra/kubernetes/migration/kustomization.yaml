@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../base/migrate-job.yaml
+images:
+- name: ghcr.io/OWNER/REPOSITORY-api
+  newName: ghcr.io/OWNER/REPOSITORY-api
+  newTag: latest
