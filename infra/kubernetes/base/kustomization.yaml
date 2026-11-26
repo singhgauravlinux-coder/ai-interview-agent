@@ -9,8 +9,8 @@ resources:
 - hpa.yaml
 images:
 - name: ghcr.io/OWNER/REPOSITORY-api
-  newName: ghcr.io/OWNER/REPOSITORY-api
-  newTag: latest
+  newName: ghcr.io/singhgauravlinux-coder/ai-interview-agent-api
+  newTag: 064977f5f970c174e595962045fc507a3aad352a
 - name: ghcr.io/OWNER/REPOSITORY-web
-  newName: ghcr.io/OWNER/REPOSITORY-web
-  newTag: latest
+  newName: ghcr.io/singhgauravlinux-coder/ai-interview-agent-web
+  newTag: 064977f5f970c174e595962045fc507a3aad352a
