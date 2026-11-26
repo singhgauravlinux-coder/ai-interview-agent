@@ -30,7 +30,9 @@ jobs:
         run: python -m compileall -q app migrations
         working-directory: backend
       - name: Run backend tests
-        run: pytest -q
+        env:
+          PYTHONPATH: ${{ github.workspace }}/backend
+        run: python -m pytest -q
         working-directory: backend
 
   web-quality:
@@ -121,6 +123,6 @@ jobs:
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add infra/kubernetes/base/kustomization.yaml
+          git add infra/kubernetes/base/kustomization.yaml infra/kubernetes/migration/kustomization.yaml
           git commit -m "chore(deploy): pin images to ${IMAGE_TAG} [skip ci]" || true
           git push
