@@ -4,26 +4,44 @@ metadata:
   name: interview-ingress
   namespace: ai-interview-agent
   annotations:
-    nginx.ingress.kubernetes.io/proxy-body-size: "2m"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    # Traefik's standard websecure entrypoint (HTTPS).
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik
   tls:
-    - hosts: [interview.example.com]
+    - hosts:
+        - interview.local
       secretName: interview-tls
   rules:
-    - host: interview.example.com
+    - host: interview.local
       http:
         paths:
           - path: /api/v1
             pathType: Prefix
-            backend: { service: { name: interview-api, port: { number: 8000 } } }
+            backend:
+              service:
+                name: interview-api
+                port:
+                  number: 8000
           - path: /health
             pathType: Exact
-            backend: { service: { name: interview-api, port: { number: 8000 } } }
+            backend:
+              service:
+                name: interview-api
+                port:
+                  number: 8000
           - path: /ready
             pathType: Exact
-            backend: { service: { name: interview-api, port: { number: 8000 } } }
+            backend:
+              service:
+                name: interview-api
+                port:
+                  number: 8000
           - path: /
             pathType: Prefix
-            backend: { service: { name: interview-web, port: { number: 3000 } } }
+            backend:
+              service:
+                name: interview-web
+                port:
+                  number: 3000
