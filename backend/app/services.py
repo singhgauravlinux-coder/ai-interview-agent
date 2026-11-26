@@ -12,21 +12,102 @@ def create_interview(db: Session, payload):
     return session
 
 def start_interview(db: Session, session_id):
-    s = db.get(InterviewSession, session_id)
+    """
+    Start an interview exactly once.
+
+    PostgreSQL row-level locking serializes concurrent start requests for the
+    same session. If questions already exist, return them instead of inserting
+    a second set (for example, when the browser retries a timed-out request).
+    """
+    from sqlalchemy.exc import IntegrityError
+
+    # Lock the parent row before checking or creating its questions. A second
+    # request for this session waits here, then observes the first request's
+    # committed status and questions.
+    s = (
+        db.query(InterviewSession)
+        .filter(InterviewSession.id == session_id)
+        .with_for_update()
+        .populate_existing()
+        .one_or_none()
+    )
     if not s:
         raise HTTPException(404, "Interview not found")
+
+    if s.status in ("completed", "abandoned"):
+        raise HTTPException(409, f"Cannot start interview in state {s.status}")
+
+    existing_questions = (
+        db.query(InterviewQuestion)
+        .filter(InterviewQuestion.session_id == s.id)
+        .order_by(InterviewQuestion.sequence)
+        .all()
+    )
+
+    # Idempotent retry path: never generate or insert a second question set.
+    if existing_questions:
+        if s.status in ("created", "ready"):
+            s.status = "in_progress"
+            if s.started_at is None:
+                s.started_at = datetime.now(timezone.utc)
+            db.commit()
+        elif s.status != "in_progress":
+            raise HTTPException(409, f"Cannot start interview in state {s.status}")
+
+        db.expire(s, ["questions"])
+        return s
+
     if s.status not in ("created", "ready"):
         raise HTTPException(409, f"Cannot start interview in state {s.status}")
-    questions = generate_questions(s.category, s.job_title, s.skills, s.experience_level)
-    for i, q in enumerate(questions, start=1):
-        db.add(InterviewQuestion(session_id=s.id, sequence=i, question=q["question"],
-            competency=q["competency"], difficulty=q.get("difficulty", "medium"),
-            expected_evidence=q.get("expected_evidence", [])))
-    s.status = "in_progress"
-    s.started_at = datetime.now(timezone.utc)
-    db.commit()
-    db.refresh(s)
-    return s
+
+    try:
+        questions = generate_questions(
+            s.category, s.job_title, s.skills, s.experience_level
+        )
+        if not questions:
+            raise HTTPException(503, "No interview questions could be generated")
+
+        for i, q in enumerate(questions, start=1):
+            db.add(
+                InterviewQuestion(
+                    session_id=s.id,
+                    sequence=i,
+                    question=q["question"],
+                    competency=q["competency"],
+                    difficulty=q.get("difficulty", "medium"),
+                    expected_evidence=q.get("expected_evidence", []),
+                )
+            )
+
+        s.status = "in_progress"
+        s.started_at = datetime.now(timezone.utc)
+        db.commit()
+        db.expire(s, ["questions"])
+        return s
+    except IntegrityError:
+        db.rollback()
+
+        # Defensive recovery for an unexpected competing writer. Do not
+        # remove the database uniqueness constraint.
+        recovered = db.get(InterviewSession, session_id)
+        if recovered:
+            recovered_questions = (
+                db.query(InterviewQuestion)
+                .filter(InterviewQuestion.session_id == session_id)
+                .order_by(InterviewQuestion.sequence)
+                .all()
+            )
+            if recovered_questions and recovered.status == "in_progress":
+                db.expire(recovered, ["questions"])
+                return recovered
+
+        raise HTTPException(
+            409,
+            "Interview start conflicted with another request. Please retry."
+        )
+    except Exception:
+        db.rollback()
+        raise
 
 def submit_answer(db: Session, session_id, question_id, answer: str):
     s = db.get(InterviewSession, session_id)
